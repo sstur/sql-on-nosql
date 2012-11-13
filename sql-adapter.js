@@ -19,16 +19,13 @@
   // Helpers
   var forEach = function(obj, callback) {
       if (Array.isArray(obj)) {
-        for (var i = 0; i < obj.length; i++) {
-          callback.call(obj, obj[i], i);
-        }
+        obj.forEach(callback);
       } else
       if (obj === Object(obj)) {
         var keys = Object.keys(obj);
-        for (var i = 0; i < keys.length; i++) {
-          var key = keys[i];
+        keys.forEach(function(key) {
           callback.call(obj, key, obj[key]);
-        }
+        });
       }
     },
     extractLiterals = function(str, subs) {
@@ -49,8 +46,8 @@
         if (test === '[object Object]') {
           forEach(subs, function(key, value) {
             if (str.indexOf(':' + key) !== -1) {
-              var patt = new RegExp('\\:' + key + '\\b'),
-                label = '_' + prefix + (++counter) + '_';
+              var patt = new RegExp('\\:' + key + '\\b');
+              label = '_' + prefix + (++counter) + '_';
               literals[label] = value;
               str = str.replace(patt, label);
             }
@@ -58,7 +55,7 @@
         }
         else if (test === '[object Array]') {
           while (str.indexOf('?') !== -1) {
-            var label = '_' + prefix + (++counter) + '_';
+            label = '_' + prefix + (++counter) + '_';
             literals[label] = subs.shift();
             str = str.replace(/\?/, label);
           }
@@ -72,12 +69,10 @@
           return (test in literals) ? literals[test] : test;
         }
       };
-    },
+    };
 
   // Shortcuts
-
-    // Default datastore
-    _defaultStorage = 'local',
+  var _defaultStorage = 'local',
 
     _currentTable = null,
 
@@ -95,7 +90,7 @@
 
     // Map path argument to a table object, also for creating new table objects
     _getTable = function(path, createIfNotExist) {
-      var path = _getPath(path);
+      path = _getPath(path);
       _currentTable = _datastores[path.storage].tables[path.table];
       if (!_currentTable && createIfNotExist) {
         _currentTable = _datastores[path.storage].tables[path.table] = {rows: _createDataset(), fields: {}, auto_inc: 0};
@@ -125,8 +120,8 @@
 
     // Normalize passed in argument
     _parseQuery = function(dql, subs) {
-      var extract = extractLiterals(dql, subs),
-        dql = extract.string.
+      var extract = extractLiterals(dql, subs);
+      dql = extract.string.
           // Remove space around modifiers
           replace(/\s*([^a-z0-9_()*]+)\s*/gi, '$1').
           // Add delimiters around operators
@@ -140,7 +135,7 @@
       // Uppercase keywords and convert spaces to underscores
       forEach(_keywords, function(keyword, patt) {
         var m = patt.exec(dql);
-        patt.lastIndex = 0
+        patt.lastIndex = 0;
         if (m) {
           dql = dql.substring(0, m.index) +
             m[0].toUpperCase().replace(/\s/g, '_') +
@@ -408,8 +403,8 @@
       forEach(fields || [], function(field) {
         var extract = extractLiterals(field),
           parts = extract.string.replace(/\s+/g, ' ').split(' '),
-          field = _currentTable.fields[parts.shift()] = {},
           token;
+        field = _currentTable.fields[parts.shift()] = {};
         while (token = parts.shift()) {
           switch (token.toLowerCase()) {
             case 'auto_inc':
@@ -442,7 +437,7 @@
     },
 
     dropTable: function(path) {
-      var path = _getPath(path);
+      path = _getPath(path);
       delete _datastores[path.storage].tables[path.table];
       _commit();
     },
