@@ -9,9 +9,8 @@
  */
 (function(win) {
 
-  //this represents the two datastores
-  //todo: interface using get(), set()
-  var local = {}, session = {};
+  //this represents the two datastores in the browser
+  var local = {tables: {}}, session = {tables: {}};
 
   // Helpers
   var inArray = function( obj, arr ) {
@@ -100,9 +99,9 @@
 
     _currentTable = null,
 
-    _data = {
-      local: local.DomSQL ? JSON.parse( local.DomSQL ) : {tables:{}},
-      session: session.DomSQL ? JSON.parse( session.DomSQL ) : {tables:{}}
+    _datastores = {
+      local: local,
+      session: session
     },
 
     // Parse a path argument, i.e 'local.foo'
@@ -120,9 +119,9 @@
     // Map path argument to a table object, also for creating new table objects
     _getTable = function( path, createIfNotExist ) {
       var path = _getPath( path );
-      _currentTable = _data[ path.storage ].tables[ path.table ];
+      _currentTable = _datastores[ path.storage ].tables[ path.table ];
       if ( !_currentTable && createIfNotExist ) {
-        _currentTable = _data[ path.storage ].tables[ path.table ] = {rows:_createDataset(),fields:{},auto_inc:0};
+        _currentTable = _datastores[ path.storage ].tables[ path.table ] = {rows:_createDataset(),fields:{},auto_inc:0};
       }
       else if ( _currentTable ) {
         _createDataset( _currentTable.rows );
@@ -132,8 +131,9 @@
 
     // Serialize and store data
     _commit = function() {
-      local.DomSQL = JSON.stringify( _data.local );
-      session.DomSQL = JSON.stringify( _data.session );
+      Object.keys(_datastores).forEach(function(name) {
+        //persist(name, _datastores[name])
+      });
     },
 
     // Create hash of reserved keywords and compiled RegEx patterns
@@ -456,11 +456,11 @@
     showTables: function() {
       var out = [];
       out.push( '[local]' );
-      each( _data.local.tables, function( table ) {
+      each( _datastores.local.tables, function( table ) {
         out.push( '\t' + table );
       });
       out.push( '[session]' );
-      each( _data.session.tables, function( table ) {
+      each( _datastores.session.tables, function( table ) {
         out.push( '\t' + table );
       });
       return out.join( '\n' );
@@ -468,7 +468,7 @@
 
     dropTable: function( path ) {
       var path = _getPath( path );
-      delete _data[ path.storage ].tables[ path.table ];
+      delete _datastores[ path.storage ].tables[ path.table ];
       _commit();
     },
 
@@ -510,14 +510,6 @@
       }
       feed.where = where.join( ' ' );
       return _commandParsers[ command ]( feed );
-    },
-
-    useLocal: function() {
-      _defaultStorage = 'local';
-    },
-
-    useSession: function() {
-      _defaultStorage = 'session';
     }
   };
 
