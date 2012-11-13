@@ -13,41 +13,19 @@
   var local = {tables: {}}, session = {tables: {}};
 
   // Helpers
-  var inArray = function( obj, arr ) {
-      for ( var i = 0; i < arr.length; i++ ) {
-        if ( arr[i] === obj ) {
-          return true;
-        }
-      }
-      return false;
-    },
-    toArray = function( obj ) {
-      var result = [], n = obj.length, i = 0;
-      for ( i; i < n; i++ ) {
-        result[i] = obj[i];
-      }
-      return result;
-    },
-    each = function( obj, callback ) {
-      if ( {}.toString.call( obj ) === '[object Object]' ) {
-        for ( var key in obj ) {
-          callback.call( obj, key, obj[ key ] );
-        }
-      }
-      else if ( obj.length ) {
+  var each = function( obj, callback ) {
+      if ( Array.isArray( obj ) ) {
         for ( var i = 0; i < obj.length; i++ ) {
           callback.call( obj, obj[ i ], i );
         }
-      }
-    },
-    keys = function( obj ) {
-      var result = [], key;
-      for ( key in obj ) {
-        if ( obj.hasOwnProperty( key ) ) {
-          result.push( key );
+      } else
+      if ( obj === Object( obj ) ) {
+        var keys = Object.keys( obj );
+        for ( var i = 0; i < keys.length; i++ ) {
+          var key = keys[ i ];
+          callback.call( obj, key, obj[ key ] );
         }
       }
-      return result;
     },
     extractLiterals = function( str, subs ) {
       var literals = {},
@@ -234,13 +212,13 @@
     _validateRow = function( row ) {
       var fields = _currentTable.fields;
       // If no fields are defined in the schema, just return the row
-      if ( !keys( fields ).length ) {
+      if ( !Object.keys( fields ).length ) {
         return row;
       }
       // Schema defined fields
       each( fields, function( field, meta ) {
         // Schema fields with attributes
-        if ( keys( meta ).length ) {
+        if ( Object.keys( meta ).length ) {
           each( meta, function( attr, value ) {
             if ( value ) {
               row[ field ] = function() {
@@ -355,7 +333,7 @@
         if ( fields !== '*' ) {
           each( result, function( row ) {
             for ( field in row ) {
-              if ( !inArray( field, fields ) ) {
+              if ( fields.indexOf( field ) < 0 ) {
                 delete row[ field ];
               }
             }
