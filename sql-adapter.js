@@ -13,7 +13,7 @@
   var local = {tables: {}}, session = {tables: {}};
 
   // Helpers
-  var each = function( obj, callback ) {
+  var forEach = function( obj, callback ) {
       if ( Array.isArray( obj ) ) {
         for ( var i = 0; i < obj.length; i++ ) {
           callback.call( obj, obj[ i ], i );
@@ -43,7 +43,7 @@
       if ( subs ) {
         var test = {}.toString.call( subs );
         if ( test === '[object Object]' ) {
-          each( subs, function( key, value ) {
+          forEach( subs, function( key, value ) {
             if ( str.indexOf( ':' + key ) !== -1 ) {
               var patt = new RegExp( '\\:' + key + '\\b' ),
                 label = '_' + prefix + ( ++counter ) + '_';
@@ -99,7 +99,7 @@
       var path = _getPath( path );
       _currentTable = _datastores[ path.storage ].tables[ path.table ];
       if ( !_currentTable && createIfNotExist ) {
-        _currentTable = _datastores[ path.storage ].tables[ path.table ] = {rows:_createDataset(),fields:{},auto_inc:0};
+        _currentTable = _datastores[ path.storage ].tables[ path.table ] = {rows: _createDataset(), fields: {}, auto_inc: 0};
       }
       else if ( _currentTable ) {
         _createDataset( _currentTable.rows );
@@ -117,7 +117,7 @@
     // Create hash of reserved keywords and compiled RegEx patterns
     _keywords = function() {
       var res = {};
-      each( 'SELECT,ORDER BY,DESC,ASC,INSERT INTO,UPDATE,SET,WHERE,AND,OR,DELETE FROM,LIMIT,VALUES'.
+      forEach( 'SELECT,ORDER BY,DESC,ASC,INSERT INTO,UPDATE,SET,WHERE,AND,OR,DELETE FROM,LIMIT,VALUES'.
         split(','), function( it ) {
         res[ it ] = new RegExp( '(^|\\b)'+it+'($|\\b)', 'gi' );
       });
@@ -139,7 +139,7 @@
           // Trim
           replace( /^\s+|\s+$/, '' );
       // Uppercase keywords and convert spaces to underscores
-      each( _keywords, function( keyword, patt ) {
+      forEach( _keywords, function( keyword, patt ) {
         var m = patt.exec( dql );
         patt.lastIndex = 0
         if ( m ) {
@@ -216,10 +216,10 @@
         return row;
       }
       // Schema defined fields
-      each( fields, function( field, meta ) {
+      forEach( fields, function( field, meta ) {
         // Schema fields with attributes
         if ( Object.keys( meta ).length ) {
-          each( meta, function( attr, value ) {
+          forEach( meta, function( attr, value ) {
             if ( value ) {
               row[ field ] = function() {
                 switch ( attr ) {
@@ -240,7 +240,7 @@
         }
       });
       // Delete rows that are not defined in the schema
-      each( row, function( name ) {
+      forEach( row, function( name ) {
         if ( !( name in fields ) ) {
           delete row[ name ];
         }
@@ -251,13 +251,13 @@
     // Sugar for handling result sets
     _sugarMethods = {
       each: function( func ) {
-        return each( this, func );
+        return forEach( this, func );
       },
       toString: function() {
         var out = [];
-        each( this, function( row, i ) {
+        forEach( this, function( row, i ) {
           out.push( '[' + i + ']' );
-          each( row, function( field, value ) {
+          forEach( row, function( field, value ) {
             out.push( '\t' + field + ':' );
             out.push( '\t  ' + value );
           });
@@ -275,7 +275,7 @@
     // Binds sugar methods to datasets and optionally creates them
     _createDataset = function( rows ) {
       var dataset = rows || [];
-      each( _sugarMethods, function( name, method ) {
+      forEach( _sugarMethods, function( name, method ) {
         dataset[ name ] = method;
       });
       return dataset;
@@ -291,7 +291,7 @@
           i = 0;
 
         // WHERE
-        each( _currentTable.rows, function( row ) {
+        forEach( _currentTable.rows, function( row ) {
           if ( !feed.where || _evalWhere( feed.where, row, feed ) ) {
             result.push( row );
           }
@@ -331,7 +331,7 @@
         }
         // Truncate returned fields
         if ( fields !== '*' ) {
-          each( result, function( row ) {
+          forEach( result, function( row ) {
             for ( field in row ) {
               if ( fields.indexOf( field ) < 0 ) {
                 delete row[ field ];
@@ -344,7 +344,7 @@
 
       'DELETE_FROM': function( feed ) {
         var newSet = [];
-        each( _currentTable.rows, function( row, i ) {
+        forEach( _currentTable.rows, function( row, i ) {
           if ( !feed.where || _evalWhere( feed.where, row, feed ) ) {
             // console.log( 'skip' );
           }
@@ -362,15 +362,15 @@
         var dataset = _currentTable.rows,
           updates = function() {
             var result = {};
-            each( feed.tokens.shift().split( ',' ), function( part ) {
+            forEach( feed.tokens.shift().split( ',' ), function( part ) {
               var parts = part.split( '#' );
               result[ parts[0] ] = feed.extract.match( parts[2] );
             });
             return result;
           }();
-        each( dataset, function( row ) {
+        forEach( dataset, function( row ) {
           if ( !feed.where || _evalWhere( feed.where, row, feed ) ) {
-            each( updates, function( name, value ) {
+            forEach( updates, function( name, value ) {
               row[ name ] = value;
             });
           }
@@ -385,7 +385,7 @@
           dataset = _currentTable.rows,
           row = {};
         // Restore any literal values
-        each( fields, function( field, i ) {
+        forEach( fields, function( field, i ) {
           row[ field ] = feed.extract.match( values[i] );
         });
         dataset.push( _validateRow( row ) );
@@ -406,7 +406,7 @@
       // Create empty table
       _getTable( path, true );
       // Loop table schema
-      each( fields || [], function( field ) {
+      forEach( fields || [], function( field ) {
         var extract = extractLiterals( field ),
           parts = extract.string.replace( /\s+/g, ' ' ).split( ' ' ),
           field = _currentTable.fields[ parts.shift() ] = {},
@@ -434,11 +434,11 @@
     showTables: function() {
       var out = [];
       out.push( '[local]' );
-      each( _datastores.local.tables, function( table ) {
+      forEach( _datastores.local.tables, function( table ) {
         out.push( '\t' + table );
       });
       out.push( '[session]' );
-      each( _datastores.session.tables, function( table ) {
+      forEach( _datastores.session.tables, function( table ) {
         out.push( '\t' + table );
       });
       return out.join( '\n' );
