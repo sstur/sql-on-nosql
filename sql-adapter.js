@@ -7,7 +7,7 @@
  * Copyright (c) 2010-2011 Pete Boere - pete@the-echoplex.net
  *
  */
-(function(win) {
+(function(exports) {
 
   //this represents the two datastores in the browser
   var local = {tables: {}}, session = {tables: {}};
@@ -418,7 +418,7 @@
 
 
   // Public methods
-  win.DomSQL = {
+  exports.SQL = {
 
     // Define a table schema, if table is already defined does nothing
     defineTable: function( path, fields ) {
