@@ -1,5 +1,5 @@
 /**
- * SQL-inspired interface on top of key-value data storage
+ * SQL-inspired interface on top of NoSQL document storage
  *
  * Based on:
  * DOM Storage Query Language
